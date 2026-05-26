@@ -1,0 +1,324 @@
+import type { Language } from './translations';
+
+export interface Word {
+  id: string;
+  german: string;
+  topic: string;
+  classLevel: string;
+  translations: Record<Language, string>;
+}
+
+export interface Topic {
+  id: string;
+  icon: string;
+  names: Record<Language, string>;
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  nickname: string;
+  classLevel: string;
+  language: Language;
+  points: number;
+  errors: number;
+  time: number;
+  date: string;
+  topic: string;
+}
+
+export interface GameState {
+  nickname: string;
+  language: Language;
+  classLevel: string;
+  topic: string;
+  points: number;
+  errors: number;
+  streak: number;
+  maxStreak: number;
+  currentWordIndex: number;
+  words: Word[];
+  startTime: number;
+  answers: { wordId: string; correct: boolean; time: number }[];
+}
+
+export const defaultTopics: Topic[] = [
+  { id: 'hobby', icon: '⚽', names: { ru: 'Хобби', uk: 'Хобі', en: 'Hobby', fr: 'Loisirs', sq: 'Hobi', hi: 'शौक', ar: 'هوايات', az: 'Hobbi' } },
+  { id: 'time', icon: '🕒', names: { ru: 'Время', uk: 'Час', en: 'Time', fr: 'Temps', sq: 'Koha', hi: 'समय', ar: 'الوقت', az: 'Vaxt' } },
+  { id: 'transport', icon: '🚆', names: { ru: 'Транспорт', uk: 'Транспорт', en: 'Transport', fr: 'Transport', sq: 'Transport', hi: 'परिवहन', ar: 'النقل', az: 'Nəqliyyat' } },
+  { id: 'home', icon: '🏠', names: { ru: 'Дом', uk: 'Дім', en: 'Home', fr: 'Maison', sq: 'Shtëpia', hi: 'घर', ar: 'البيت', az: 'Ev' } },
+  { id: 'communication', icon: '📞', names: { ru: 'Общение', uk: 'Спілкування', en: 'Communication', fr: 'Communication', sq: 'Komunikimi', hi: 'संचार', ar: 'التواصل', az: 'Ünsiyyət' } },
+  { id: 'shopping', icon: '🛒', names: { ru: 'Покупки', uk: 'Покупки', en: 'Shopping', fr: 'Achats', sq: 'Blerje', hi: 'खरीदारी', ar: 'التسوق', az: 'Alış-veriş' } },
+  { id: 'school', icon: '🎓', names: { ru: 'Школа', uk: 'Школа', en: 'School', fr: 'École', sq: 'Shkolla', hi: 'स्कूल', ar: 'المدرسة', az: 'Məktəb' } },
+  { id: 'food', icon: '🍎', names: { ru: 'Еда', uk: 'Їжа', en: 'Food', fr: 'Nourriture', sq: 'Ushqimi', hi: 'भोजन', ar: 'الطعام', az: 'Yemək' } },
+  { id: 'travel', icon: '🌍', names: { ru: 'Путешествия', uk: 'Подорожі', en: 'Travel', fr: 'Voyage', sq: 'Udhëtimi', hi: 'यात्रा', ar: 'السفر', az: 'Səyahət' } },
+];
+
+export const defaultWords: Word[] = [
+  // Example words - will be populated via admin
+  {
+    id: '1',
+    german: 'spielen',
+    topic: 'hobby',
+    classLevel: '5',
+    translations: { ru: 'играть', uk: 'грати', en: 'to play', fr: 'jouer', sq: 'luaj', hi: 'खेलना', ar: 'يلعب', az: 'oynamaq' }
+  },
+  {
+    id: '2',
+    german: 'die Schule',
+    topic: 'school',
+    classLevel: '5',
+    translations: { ru: 'школа', uk: 'школа', en: 'school', fr: 'école', sq: 'shkolla', hi: 'स्कूल', ar: 'المدرسة', az: 'məktəb' }
+  },
+  {
+    id: '3',
+    german: 'essen',
+    topic: 'food',
+    classLevel: '5',
+    translations: { ru: 'есть, кушать', uk: 'їсти', en: 'to eat', fr: 'manger', sq: 'ha', hi: 'खाना', ar: 'يأكل', az: 'yemək' }
+  },
+];
+
+const STORAGE_KEYS = {
+  WORDS: 'german-battle-words',
+  TOPICS: 'german-battle-topics',
+  LEADERBOARD: 'german-battle-leaderboard',
+  BEST_RESULTS: 'german-battle-best-results',
+  SAVED_NICKNAME: 'german-battle-nickname',
+  SAVED_LANGUAGE: 'german-battle-language',
+  CLASSES: 'german-battle-classes',
+};
+
+export function getWords(): Word[] {
+  if (typeof window === 'undefined') return defaultWords;
+  const stored = localStorage.getItem(STORAGE_KEYS.WORDS);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultWords;
+    }
+  }
+  return defaultWords;
+}
+
+export function saveWords(words: Word[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEYS.WORDS, JSON.stringify(words));
+}
+
+export function getTopics(): Topic[] {
+  if (typeof window === 'undefined') return defaultTopics;
+  const stored = localStorage.getItem(STORAGE_KEYS.TOPICS);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultTopics;
+    }
+  }
+  return defaultTopics;
+}
+
+export function saveTopics(topics: Topic[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEYS.TOPICS, JSON.stringify(topics));
+}
+
+export function getLeaderboard(): LeaderboardEntry[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(STORAGE_KEYS.LEADERBOARD);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+export function saveLeaderboardEntry(entry: LeaderboardEntry): void {
+  if (typeof window === 'undefined') return;
+  const leaderboard = getLeaderboard();
+  leaderboard.push(entry);
+  
+  // Sort: fewer errors first, then faster time
+  leaderboard.sort((a, b) => {
+    if (a.errors !== b.errors) return a.errors - b.errors;
+    return a.time - b.time;
+  });
+  
+  // Keep top 100
+  const trimmed = leaderboard.slice(0, 100);
+  localStorage.setItem(STORAGE_KEYS.LEADERBOARD, JSON.stringify(trimmed));
+}
+
+export function getBestResult(nickname: string, classLevel: string, topic: string): LeaderboardEntry | null {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem(STORAGE_KEYS.BEST_RESULTS);
+  if (stored) {
+    try {
+      const results: Record<string, LeaderboardEntry> = JSON.parse(stored);
+      const key = `${nickname}-${classLevel}-${topic}`;
+      return results[key] || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+export function saveBestResult(entry: LeaderboardEntry): boolean {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem(STORAGE_KEYS.BEST_RESULTS);
+  let results: Record<string, LeaderboardEntry> = {};
+  
+  if (stored) {
+    try {
+      results = JSON.parse(stored);
+    } catch {
+      results = {};
+    }
+  }
+  
+  const key = `${entry.nickname}-${entry.classLevel}-${entry.topic}`;
+  const existing = results[key];
+  
+  // Check if new result is better (fewer errors, or same errors but faster)
+  const isBetter = !existing || 
+    entry.errors < existing.errors || 
+    (entry.errors === existing.errors && entry.time < existing.time);
+  
+  if (isBetter) {
+    results[key] = entry;
+    localStorage.setItem(STORAGE_KEYS.BEST_RESULTS, JSON.stringify(results));
+    return true;
+  }
+  
+  return false;
+}
+
+export function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+export function generateOptions(correctWord: Word, allWords: Word[], language: Language): string[] {
+  const correctTranslation = correctWord.translations[language];
+  const otherWords = allWords.filter(w => w.id !== correctWord.id && w.translations[language] !== correctTranslation);
+  
+  const shuffledOthers = shuffleArray(otherWords);
+  const wrongOptions = shuffledOthers.slice(0, 3).map(w => w.translations[language]);
+  
+  // If not enough wrong options, generate placeholder ones
+  while (wrongOptions.length < 3) {
+    wrongOptions.push(`---`);
+  }
+  
+  const options = [correctTranslation, ...wrongOptions];
+  return shuffleArray(options);
+}
+
+export function speakGerman(text: string): void {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'de-DE';
+  utterance.rate = 0.9;
+  window.speechSynthesis.speak(utterance);
+}
+
+export function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+export function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// Nickname persistence
+export function getSavedNickname(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(STORAGE_KEYS.SAVED_NICKNAME) || '';
+}
+
+export function saveNickname(nickname: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEYS.SAVED_NICKNAME, nickname);
+}
+
+export function getSavedLanguage(): string {
+  if (typeof window === 'undefined') return 'ru';
+  return localStorage.getItem(STORAGE_KEYS.SAVED_LANGUAGE) || 'ru';
+}
+
+export function saveLanguage(language: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEYS.SAVED_LANGUAGE, language);
+}
+
+// Classes management
+export const defaultClasses = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'];
+
+export function getClasses(): string[] {
+  if (typeof window === 'undefined') return defaultClasses;
+  const stored = localStorage.getItem(STORAGE_KEYS.CLASSES);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultClasses;
+    }
+  }
+  return defaultClasses;
+}
+
+export function saveClasses(classes: string[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+}
+
+// Get all unique players from leaderboard
+export function getAllPlayers(): { nickname: string; gamesPlayed: number; lastPlayed: string }[] {
+  const leaderboard = getLeaderboard();
+  const playersMap = new Map<string, { gamesPlayed: number; lastPlayed: string }>();
+  
+  leaderboard.forEach(entry => {
+    const existing = playersMap.get(entry.nickname);
+    if (existing) {
+      existing.gamesPlayed++;
+      if (entry.date > existing.lastPlayed) {
+        existing.lastPlayed = entry.date;
+      }
+    } else {
+      playersMap.set(entry.nickname, { gamesPlayed: 1, lastPlayed: entry.date });
+    }
+  });
+  
+  return Array.from(playersMap.entries()).map(([nickname, data]) => ({
+    nickname,
+    ...data
+  })).sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+}
+
+// Clear leaderboard
+export function clearLeaderboard(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STORAGE_KEYS.LEADERBOARD);
+  localStorage.removeItem(STORAGE_KEYS.BEST_RESULTS);
+}
+
+// Delete player from leaderboard
+export function deletePlayerFromLeaderboard(nickname: string): void {
+  if (typeof window === 'undefined') return;
+  const leaderboard = getLeaderboard();
+  const filtered = leaderboard.filter(e => e.nickname !== nickname);
+  localStorage.setItem(STORAGE_KEYS.LEADERBOARD, JSON.stringify(filtered));
+}
